@@ -7,6 +7,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.List;
 
 @Entity
 @Getter
@@ -29,5 +30,9 @@ public class Account {
     @ManyToOne
     @JsonIgnore
     private Customer customer;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Transaction> transactions;
 
 }
