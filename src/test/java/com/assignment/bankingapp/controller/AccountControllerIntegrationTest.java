@@ -251,4 +251,137 @@ class AccountControllerIntegrationTest {
         BigDecimal expected = initialBalance.add(fundRequest.getAmount());
         assertEquals(expected, afterDeposit);
     }
+
+    @Test
+    void transfer_returnsBadRequest_whenSourceAndTargetAccountNumberMatches() throws Exception {
+        FundTransferRequest transferRequest =
+            new FundTransferRequest("10000000", BigDecimal.valueOf(50000), "10000000",
+                "Matthew Baker", null);
+        MvcResult result = mockMvc.perform(post("/account/transfer")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+        ResponseObject expectedResponseBody =
+            new ResponseObject(Notification.INVALID_TRANSFER_DETAILS.message(), 400, null);
+        String actualResponseBody = result.getResponse().getContentAsString();
+
+        assertEquals(objectMapper.writeValueAsString(expectedResponseBody), actualResponseBody);
+    }
+
+    @Test
+    void transfer_returnsBadRequest_whenTargetAccountNameDoesNotMatch() throws Exception {
+        Account targetAccount  = accountService.createNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+        FundTransferRequest transferRequest =
+            new FundTransferRequest("10000000", BigDecimal.valueOf(50000), targetAccount.getAccountNumber(),
+                "Matthew Baker", null);
+        MvcResult result = mockMvc.perform(post("/account/transfer")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+        ResponseObject expectedResponseBody =
+            new ResponseObject(Notification.INVALID_TRANSFER_DETAILS.message(), 400, null);
+        String actualResponseBody = result.getResponse().getContentAsString();
+
+        assertEquals(objectMapper.writeValueAsString(expectedResponseBody), actualResponseBody);
+    }
+
+    @Test
+    void transfer_returnsBadRequest_whenRequestBodyObjectFieldIsNull() throws Exception {
+        FundTransferRequest transferRequest =
+            new FundTransferRequest("10000000", BigDecimal.valueOf(50000), null,
+                "Matthew Baker", null);
+
+        mockMvc.perform(post("/account/transfer")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void transfer_returnsNotFound_whenAccountIsNotFoundById() throws Exception {
+        FundTransferRequest transferRequest =
+            new FundTransferRequest("10000000", BigDecimal.valueOf(50000), "10000033",
+                "Matthew Baker", null);
+
+        mockMvc.perform(post("/account/transfer")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andDo(print())
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void transfer_returnsJsonResponseBodyWithStatusOk_whenInputIsValidAndTransferSuccessful() throws Exception {
+        Account targetAccount  = accountService.createNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+        FundTransferRequest transferRequest =
+            new FundTransferRequest("10000000", BigDecimal.valueOf(10000), targetAccount.getAccountNumber(),
+                "John Smith", null);
+
+        MvcResult result = mockMvc.perform(post("/account/transfer")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andReturn();
+
+        ResponseObject expectedResponseBody = new ResponseObject(Notification.TRANSFER_SUCCESS.message(), 200, null);
+        String actualResponseBody = result.getResponse().getContentAsString();
+
+        assertEquals(objectMapper.writeValueAsString(expectedResponseBody), actualResponseBody);
+    }
+
+    @Test
+    void transfer_sourceAccountBalanceDeductedTargetAccountBalanceAddedAndPersisted_whenInputIsValid() throws Exception {
+        Account targetAccount  =
+            accountService.createNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+        BigDecimal initialSourceAccountBalance = accountService.getAccountBalance(3L);
+        FundTransferRequest transferRequest =
+            new FundTransferRequest("10000000", BigDecimal.valueOf(50000), targetAccount.getAccountNumber(),
+                "John Smith", null);
+
+        mockMvc.perform(post("/account/transfer")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        BigDecimal actualTargetAccountBalance =
+            accountService.findAccountAccountNumber(targetAccount.getAccountNumber()).getBalance().stripTrailingZeros();
+        BigDecimal expectedTargetAccountBalance = transferRequest.getAmount().stripTrailingZeros();
+        BigDecimal expectedSourceAccountBalance = initialSourceAccountBalance.subtract(transferRequest.getAmount())
+            .stripTrailingZeros();
+        BigDecimal actualSourceAccountBalance = accountService.getAccountBalance(3L).stripTrailingZeros();
+
+        assertEquals(expectedSourceAccountBalance, actualSourceAccountBalance);
+        assertEquals(expectedTargetAccountBalance, actualTargetAccountBalance);
+    }
+
+    @Test
+    void transfer_returnsBadRequest_whenSourceAccountHasNotEnoughFunds() throws Exception {
+        Account targetAccount  =
+            accountService.createNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+        FundTransferRequest transferRequest =
+            new FundTransferRequest("10000000", BigDecimal.valueOf(500000000), targetAccount.getAccountNumber(),
+                "John Smith", null);
+
+        MvcResult result = mockMvc.perform(post("/account/transfer")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+        ResponseObject expectedResponseBody =
+            new ResponseObject(Notification.INSUFFICIENT_FUNDS.message(), 400, null);
+        String actualResponseBody = result.getResponse().getContentAsString();
+
+        assertEquals(objectMapper.writeValueAsString(expectedResponseBody), actualResponseBody);
+    }
 }
