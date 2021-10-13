@@ -5,9 +5,12 @@ import com.assignment.bankingapp.service.AccountService;
 import com.assignment.bankingapp.service.CustomerService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Currency;
 
 @Component
@@ -16,10 +19,12 @@ public class DataInitializer implements CommandLineRunner {
 
     CustomerService customerService;
     AccountService accountService;
+    private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(CustomerService customerService, AccountService accountService) {
         this.customerService = customerService;
         this.accountService = accountService;
+        this.passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     @Override
@@ -34,6 +39,10 @@ public class DataInitializer implements CommandLineRunner {
 
         Customer customer = Customer.builder()
             .email("customer@example.com")
+            .assignedCustomerCode("773454489")
+            .password(passwordEncoder.encode("hello world!"))
+            .phoneNumber("+462077477777")
+            .createdAt(LocalDate.now())
             .firstName("John")
             .lastName("Smith")
             .address(address)
