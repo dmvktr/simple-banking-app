@@ -259,13 +259,15 @@ class AccountControllerIntegrationTest {
     @Test
     void deposit_transactionIsPersisted_whenDepositSuccessful() throws Exception {
         FundRequest fundRequest = new FundRequest("10000000", BigDecimal.valueOf(50000));
+        Account account = accountService.findAccountByAccountNumber(fundRequest.getAccountNumber());
+        int expected = transactionService.findAllTransactionsOfAccountById(account.getId()).size() + 1;
         mockMvc.perform(post("/account/deposit")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(fundRequest)))
             .andDo(print())
             .andExpect(status().isOk());
-        Account account = accountService.findAccountByAccountNumber(fundRequest.getAccountNumber());
-        assertEquals(1, transactionService.findAllTransactionsOfAccountById(account.getId()).size());
+        int actual = transactionService.findAllTransactionsOfAccountById(account.getId()).size();
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -403,18 +405,26 @@ class AccountControllerIntegrationTest {
 
     @Test
     void transfer_transactionsArePersistedForSourceAndRecipient_whenTransferSuccessful() throws Exception {
-        Account targetAccount  =
+        Account recipient  =
             accountService.createAndSaveNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
         FundTransferRequest transferRequest =
-            new FundTransferRequest("10000000", BigDecimal.valueOf(50000), targetAccount.getAccountNumber(),
+            new FundTransferRequest("10000000", BigDecimal.valueOf(50000), recipient.getAccountNumber(),
                 "John Smith", null);
+        Account sourceAccount = accountService.findAccountByAccountNumber(transferRequest.getTargetAccountNumber());
+        int recipientExpected = transactionService.findAllTransactionsOfAccountById(recipient.getId()).size() + 1;
+        int sourceAccountExpectedCount =
+            transactionService.findAllTransactionsOfAccountById(sourceAccount.getId()).size() + 1;
 
         mockMvc.perform(post("/account/transfer")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(transferRequest)))
             .andDo(print())
             .andExpect(status().isOk());
+        int recipientActualCount = transactionService.findAllTransactionsOfAccountById(recipient.getId()).size();
+        int sourceAccountActualCount =
+            transactionService.findAllTransactionsOfAccountById(sourceAccount.getId()).size();
 
-        assertEquals(2, transactionService.listAllTransactions().size());
+        assertEquals(recipientExpected, recipientActualCount);
+        assertEquals(sourceAccountExpectedCount, sourceAccountActualCount);
     }
 }
