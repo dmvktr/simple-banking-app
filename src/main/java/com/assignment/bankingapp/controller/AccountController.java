@@ -46,4 +46,11 @@ public class AccountController {
         return ResponseEntity.ok(
             new ResponseObject(Notification.WITHDRAW_SUCCESS.message(), HttpStatus.OK.value(), null));
     }
+
+    @PostMapping("/deposit")
+    public ResponseEntity<Object> deposit(@Valid @RequestBody FundRequest fundRequest){
+        accountService.deposit(fundRequest.getAccountNumber(), fundRequest.getAmount());
+        return new ResponseEntity<>(new ResponseObject(Notification.DEPOSIT_SUCCESS.message(), HttpStatus.OK.value(),
+            null), HttpStatus.OK);
+    }
 }
