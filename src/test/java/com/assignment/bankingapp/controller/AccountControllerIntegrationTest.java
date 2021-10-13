@@ -3,6 +3,7 @@ package com.assignment.bankingapp.controller;
 import com.assignment.bankingapp.entity.*;
 import com.assignment.bankingapp.notification.Notification;
 import com.assignment.bankingapp.service.AccountService;
+import com.assignment.bankingapp.service.TransactionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,9 @@ class AccountControllerIntegrationTest {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private TransactionService transactionService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -253,6 +257,18 @@ class AccountControllerIntegrationTest {
     }
 
     @Test
+    void deposit_transactionIsPersisted_whenDepositSuccessful() throws Exception {
+        FundRequest fundRequest = new FundRequest("10000000", BigDecimal.valueOf(50000));
+        mockMvc.perform(post("/account/deposit")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(fundRequest)))
+            .andDo(print())
+            .andExpect(status().isOk());
+        Account account = accountService.findAccountByAccountNumber(fundRequest.getAccountNumber());
+        assertEquals(1, transactionService.findAllTransactionsOfAccountById(account.getId()).size());
+    }
+
+    @Test
     void transfer_returnsBadRequest_whenSourceAndTargetAccountNumberMatches() throws Exception {
         FundTransferRequest transferRequest =
             new FundTransferRequest("10000000", BigDecimal.valueOf(50000), "10000000",
@@ -273,7 +289,7 @@ class AccountControllerIntegrationTest {
 
     @Test
     void transfer_returnsBadRequest_whenTargetAccountNameDoesNotMatch() throws Exception {
-        Account targetAccount  = accountService.createNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+        Account targetAccount  = accountService.createAndSaveNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
         FundTransferRequest transferRequest =
             new FundTransferRequest("10000000", BigDecimal.valueOf(50000), targetAccount.getAccountNumber(),
                 "Matthew Baker", null);
@@ -319,7 +335,7 @@ class AccountControllerIntegrationTest {
 
     @Test
     void transfer_returnsJsonResponseBodyWithStatusOk_whenInputIsValidAndTransferSuccessful() throws Exception {
-        Account targetAccount  = accountService.createNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+        Account targetAccount  = accountService.createAndSaveNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
         FundTransferRequest transferRequest =
             new FundTransferRequest("10000000", BigDecimal.valueOf(10000), targetAccount.getAccountNumber(),
                 "John Smith", null);
@@ -340,7 +356,7 @@ class AccountControllerIntegrationTest {
     @Test
     void transfer_sourceAccountBalanceDeductedTargetAccountBalanceAddedAndPersisted_whenInputIsValid() throws Exception {
         Account targetAccount  =
-            accountService.createNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+            accountService.createAndSaveNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
         BigDecimal initialSourceAccountBalance = accountService.getAccountBalance(3L);
         FundTransferRequest transferRequest =
             new FundTransferRequest("10000000", BigDecimal.valueOf(50000), targetAccount.getAccountNumber(),
@@ -353,7 +369,7 @@ class AccountControllerIntegrationTest {
             .andExpect(status().isOk());
 
         BigDecimal actualTargetAccountBalance =
-            accountService.findAccountAccountNumber(targetAccount.getAccountNumber()).getBalance().stripTrailingZeros();
+            accountService.findAccountByAccountNumber(targetAccount.getAccountNumber()).getBalance().stripTrailingZeros();
         BigDecimal expectedTargetAccountBalance = transferRequest.getAmount().stripTrailingZeros();
         BigDecimal expectedSourceAccountBalance = initialSourceAccountBalance.subtract(transferRequest.getAmount())
             .stripTrailingZeros();
@@ -366,7 +382,7 @@ class AccountControllerIntegrationTest {
     @Test
     void transfer_returnsBadRequest_whenSourceAccountHasNotEnoughFunds() throws Exception {
         Account targetAccount  =
-            accountService.createNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+            accountService.createAndSaveNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
         FundTransferRequest transferRequest =
             new FundTransferRequest("10000000", BigDecimal.valueOf(500000000), targetAccount.getAccountNumber(),
                 "John Smith", null);
@@ -383,5 +399,22 @@ class AccountControllerIntegrationTest {
         String actualResponseBody = result.getResponse().getContentAsString();
 
         assertEquals(objectMapper.writeValueAsString(expectedResponseBody), actualResponseBody);
+    }
+
+    @Test
+    void transfer_transactionsArePersistedForSourceAndRecipient_whenTransferSuccessful() throws Exception {
+        Account targetAccount  =
+            accountService.createAndSaveNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+        FundTransferRequest transferRequest =
+            new FundTransferRequest("10000000", BigDecimal.valueOf(50000), targetAccount.getAccountNumber(),
+                "John Smith", null);
+
+        mockMvc.perform(post("/account/transfer")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(transferRequest)))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        assertEquals(2, transactionService.listAllTransactions().size());
     }
 }
