@@ -9,10 +9,9 @@ import com.assignment.bankingapp.service.AccountService;
 import com.assignment.bankingapp.service.CustomerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/customer")
@@ -31,5 +30,12 @@ public class CustomerController {
         Customer newCustomer = customerService.newCustomer(customerCreationRequest);
         return ResponseEntity.ok(
             new ResponseObject(Notification.CUSTOMER_CREATION_SUCCESS.message(), HttpStatus.OK.value(), newCustomer));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ResponseObject> getAllCustomers(){
+        List<Customer> customers = customerService.getAllCustomers();
+        return ResponseEntity.ok(
+            new ResponseObject(Notification.CUSTOMER_LISTING.message(), HttpStatus.OK.value(), customers));
     }
 }
