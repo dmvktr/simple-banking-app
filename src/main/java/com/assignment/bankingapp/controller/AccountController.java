@@ -2,6 +2,7 @@ package com.assignment.bankingapp.controller;
 
 import com.assignment.bankingapp.entity.Account;
 import com.assignment.bankingapp.entity.AccountCreationRequest;
+import com.assignment.bankingapp.entity.FundRequest;
 import com.assignment.bankingapp.entity.ResponseObject;
 import com.assignment.bankingapp.notification.Notification;
 import com.assignment.bankingapp.service.AccountService;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.math.BigDecimal;
 
 
@@ -36,5 +38,12 @@ public class AccountController {
         BigDecimal balance = accountService.getAccountBalance(accountId);
         return ResponseEntity.ok(
             new ResponseObject(Notification.BALANCE_CHECK_SUCCESS.message(), HttpStatus.OK.value(), balance));
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<Object> withdraw(@Valid @RequestBody FundRequest fundRequest){
+        accountService.withdraw(fundRequest.getAccountNumber(), fundRequest.getAmount());
+        return ResponseEntity.ok(
+            new ResponseObject(Notification.WITHDRAW_SUCCESS.message(), HttpStatus.OK.value(), null));
     }
 }
