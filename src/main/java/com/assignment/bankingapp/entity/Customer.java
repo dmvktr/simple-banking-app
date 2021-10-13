@@ -4,6 +4,9 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 import java.util.Set;
@@ -23,7 +26,9 @@ public class Customer {
     @Column(name="auth_code")
     private String assignedCustomerCode;
     private String password;
+    @NotNull
     private String firstName;
+    @NotNull
     private String lastName;
     private String phoneNumber;
     @Email
