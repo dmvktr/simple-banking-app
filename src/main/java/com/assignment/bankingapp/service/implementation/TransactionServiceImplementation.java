@@ -49,4 +49,9 @@ public class TransactionServiceImplementation implements TransactionService {
     public List<Transaction> listAllTransactions() {
         return transactionRepository.findAll();
     }
+
+    @Override
+    public List<Transaction> findAllTransactionsOfAccountById(Long accountId) {
+        return transactionRepository.findTransactionsByAccountId(accountId);
+    }
 }
