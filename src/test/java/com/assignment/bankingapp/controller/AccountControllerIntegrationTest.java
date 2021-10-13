@@ -191,4 +191,64 @@ class AccountControllerIntegrationTest {
         BigDecimal expected = initialBalance.subtract(fundRequest.getAmount());
         assertEquals(expected, balanceAfterWithdraw);
     }
+
+    @Test
+    void deposit_returnsBadRequest_whenAmountIsLessThanOrEqualToZero() throws Exception {
+        FundRequest fundRequest = new FundRequest("10000000", BigDecimal.ZERO);
+        mockMvc.perform(post("/account/deposit")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(fundRequest)))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deposit_returnsBadRequest_whenRequestBodyIsMissing() throws Exception {
+        mockMvc.perform(post("/account/deposit")
+                .contentType("application/json"))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deposit_returnsBadRequest_whenRequestBodyObjectFieldIsNull() throws Exception {
+        FundRequest fundRequest = new FundRequest(null, BigDecimal.valueOf(111));
+        mockMvc.perform(post("/account/deposit")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(fundRequest)))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deposit_returnsJsonResponseBodyStatusOk_whenInputIsValid() throws Exception {
+        FundRequest fundRequest = new FundRequest("10000000", BigDecimal.valueOf(50000));
+        MvcResult result = mockMvc.perform(post("/account/deposit")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(fundRequest)))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andReturn();
+
+        ResponseObject expectedResponseBody =
+            new ResponseObject(Notification.DEPOSIT_SUCCESS.message(), 200, null);
+        String actualResponseBody = result.getResponse().getContentAsString();
+
+        assertEquals(objectMapper.writeValueAsString(expectedResponseBody), actualResponseBody);
+    }
+
+    @Test
+    void deposit_amountIsAddedToAndPersistedOnAccount_whenInputIsValid() throws Exception {
+        FundRequest fundRequest = new FundRequest("10000000", BigDecimal.valueOf(50000));
+        BigDecimal initialBalance = accountService.getAccountBalance(3L);
+        mockMvc.perform(post("/account/deposit")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(fundRequest)))
+            .andDo(print())
+            .andExpect(status().isOk());
+
+        BigDecimal afterDeposit = accountService.getAccountBalance(3L);
+        BigDecimal expected = initialBalance.add(fundRequest.getAmount());
+        assertEquals(expected, afterDeposit);
+    }
 }
