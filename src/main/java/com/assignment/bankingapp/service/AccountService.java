@@ -2,16 +2,21 @@ package com.assignment.bankingapp.service;
 
 import com.assignment.bankingapp.entity.Account;
 import com.assignment.bankingapp.entity.AccountType;
+import com.assignment.bankingapp.entity.FundTransferRequest;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.List;
 
-public interface AccountService { 
+public interface AccountService {
     Account createNewAccount(Long userId, AccountType type, Currency currency);
     BigDecimal getAccountBalance(Long accountId);
-    void transferFunds(BigDecimal amount, int sourceAccountNumber, int targetAccountNumber);
+    void transferFunds(BigDecimal amount, String sourceAccountNumber, String targetAccountNumber);
     void freezeAccount(Long accountId);
     void reactivateAccount(Long accountId);
-    void withdraw(Long accountId, BigDecimal amount);
-    void deposit(Long accountId, BigDecimal amount);
+    void withdraw(String accountNumber, BigDecimal withdrawAmount);
+    void deposit(String accountNumber, BigDecimal depositAmount);
+    boolean hasValidTransferDetails(FundTransferRequest transferRequest);
+    Account findAccountAccountNumber(String accountNumber);
+    List<Account> findAccountsByCustomerId(Long id);
 }
