@@ -9,7 +9,7 @@ import java.util.Currency;
 import java.util.List;
 
 public interface AccountService {
-    Account createNewAccount(Long userId, AccountType type, Currency currency);
+    Account createAndSaveNewAccount(Long userId, AccountType type, Currency currency);
     BigDecimal getAccountBalance(Long accountId);
     void transferFunds(BigDecimal amount, String sourceAccountNumber, String targetAccountNumber);
     void freezeAccount(Long accountId);
@@ -17,6 +17,6 @@ public interface AccountService {
     void withdraw(String accountNumber, BigDecimal withdrawAmount);
     void deposit(String accountNumber, BigDecimal depositAmount);
     boolean hasValidTransferDetails(FundTransferRequest transferRequest);
-    Account findAccountAccountNumber(String accountNumber);
+    Account findAccountByAccountNumber(String accountNumber);
     List<Account> findAccountsByCustomerId(Long id);
 }

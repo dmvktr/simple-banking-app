@@ -40,7 +40,7 @@ public class DataInitializer implements CommandLineRunner {
             .build();
 
         customerService.saveCustomer(customer);
-        Account account = accountService.createNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
+        Account account = accountService.createAndSaveNewAccount(1L, AccountType.DEPOSIT, Currency.getInstance("HUF"));
         accountService.deposit(account.getAccountNumber(), BigDecimal.valueOf(500000));
     }
 }

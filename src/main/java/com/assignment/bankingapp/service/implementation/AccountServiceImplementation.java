@@ -5,6 +5,7 @@ import com.assignment.bankingapp.exception.InvalidUserRequestException;
 import com.assignment.bankingapp.notification.Notification;
 import com.assignment.bankingapp.repository.AccountRepository;
 import com.assignment.bankingapp.repository.CustomerRepository;
+import com.assignment.bankingapp.repository.TransactionRepository;
 import com.assignment.bankingapp.service.AccountService;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Service;
@@ -19,17 +20,20 @@ public class AccountServiceImplementation implements AccountService {
 
     AccountRepository accountRepository;
     CustomerRepository customerRepository;
+    TransactionRepository transactionRepository;
 
     private static int lastAssignedAccountNumber = 10000000;
 
-    public AccountServiceImplementation(AccountRepository accountRepository, CustomerRepository customerRepository) {
+    public AccountServiceImplementation(AccountRepository accountRepository, CustomerRepository customerRepository,
+                                        TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
         this.customerRepository = customerRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     @Transactional
     @Override
-    public Account createNewAccount(Long userId, AccountType type, Currency currency) {
+    public Account createAndSaveNewAccount(Long userId, AccountType type, Currency currency) {
         String accountNumber = generateNewAccountNumber();
         Customer customer = customerRepository.findById(userId).orElseThrow(() ->
             new DataRetrievalFailureException(Notification.CUSTOMER_NOT_FOUND.message()));
@@ -147,7 +151,7 @@ public class AccountServiceImplementation implements AccountService {
     }
 
     @Override
-    public Account findAccountAccountNumber(String accountNumber) {
+    public Account findAccountByAccountNumber(String accountNumber) {
         return accountRepository.findAccountByAccountNumber(accountNumber).orElseThrow(() ->
             new DataRetrievalFailureException(Notification.ACCOUNT_NOT_FOUND.message()));
     }
