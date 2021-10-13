@@ -1,9 +1,6 @@
 package com.assignment.bankingapp.controller;
 
-import com.assignment.bankingapp.entity.Account;
-import com.assignment.bankingapp.entity.AccountCreationRequest;
-import com.assignment.bankingapp.entity.FundRequest;
-import com.assignment.bankingapp.entity.ResponseObject;
+import com.assignment.bankingapp.entity.*;
 import com.assignment.bankingapp.notification.Notification;
 import com.assignment.bankingapp.service.AccountService;
 import org.springframework.http.HttpStatus;
@@ -52,5 +49,19 @@ public class AccountController {
         accountService.deposit(fundRequest.getAccountNumber(), fundRequest.getAmount());
         return new ResponseEntity<>(new ResponseObject(Notification.DEPOSIT_SUCCESS.message(), HttpStatus.OK.value(),
             null), HttpStatus.OK);
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<Object> transferFunds(@Valid @RequestBody FundTransferRequest fundTransferRequest){
+        if(!accountService.hasValidTransferDetails(fundTransferRequest)){
+            return ResponseEntity.badRequest().body(
+                new ResponseObject(Notification.INVALID_TRANSFER_DETAILS.message(), HttpStatus.BAD_REQUEST.value(),
+                    null));
+        }
+        accountService.transferFunds(fundTransferRequest.getAmount(), fundTransferRequest.getAccountNumber(),
+            fundTransferRequest.getTargetAccountNumber());
+
+        return ResponseEntity.ok(new ResponseObject(Notification.TRANSFER_SUCCESS.message(), HttpStatus.OK.value(),
+            null));
     }
 }
