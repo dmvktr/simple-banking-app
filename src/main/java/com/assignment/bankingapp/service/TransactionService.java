@@ -12,4 +12,5 @@ public interface TransactionService {
     void createTransferTransaction(BigDecimal amount, String note, TransactionType type, Account source, Account recipient);
     List<Transaction> listAllTransactions();
     List<Transaction> findAllTransactionsOfAccountById(Long accountId);
+    void deleteAll();
 }
