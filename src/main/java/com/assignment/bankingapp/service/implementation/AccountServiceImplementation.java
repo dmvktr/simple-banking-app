@@ -34,9 +34,9 @@ public class AccountServiceImplementation implements AccountService {
     @Transactional
     @Override
     public Account createAndSaveNewAccount(Long userId, AccountType type, Currency currency) {
-        String accountNumber = generateNewAccountNumber();
         Customer customer = customerRepository.findById(userId).orElseThrow(() ->
             new DataRetrievalFailureException(Notification.CUSTOMER_NOT_FOUND.message()));
+        String accountNumber = generateNewAccountNumber();
         Account newAccount = Account.builder()
             .balance(BigDecimal.ZERO)
             .currency(currency).type(type)
@@ -159,5 +159,15 @@ public class AccountServiceImplementation implements AccountService {
     @Override
     public List<Account> findAccountsByCustomerId(Long id) {
         return accountRepository.findAccountsByCustomerId(id);
+    }
+
+    @Override
+    public List<Account> listAllAccounts() {
+        return accountRepository.findAll();
+    }
+
+    @Override
+    public void deleteAll() {
+        accountRepository.deleteAll();
     }
 }
