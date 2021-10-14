@@ -47,7 +47,7 @@ class AccountControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void init() {
+    void setup() {
         PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
         Address budapest = Address.builder().
             city("Budapest")
