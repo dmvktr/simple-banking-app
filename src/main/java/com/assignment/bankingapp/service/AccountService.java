@@ -19,4 +19,6 @@ public interface AccountService {
     boolean hasValidTransferDetails(FundTransferRequest transferRequest);
     Account findAccountByAccountNumber(String accountNumber);
     List<Account> findAccountsByCustomerId(Long id);
+    List<Account> listAllAccounts();
+    void deleteAll();
 }
