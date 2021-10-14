@@ -11,4 +11,5 @@ public interface CustomerService {
     Customer findByEmailAddress(String email);
     List<Customer> getAllCustomers();
     void saveCustomer(Customer customer);
+    void deleteAll();
 }

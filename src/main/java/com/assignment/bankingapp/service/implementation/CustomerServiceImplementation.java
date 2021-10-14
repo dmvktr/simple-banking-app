@@ -33,6 +33,7 @@ public class CustomerServiceImplementation implements CustomerService {
             .assignedCustomerCode(customerCreationRequest.getAssignedCustomerCode())
             .firstName(customerCreationRequest.getFirstName())
             .lastName(customerCreationRequest.getLastName())
+            .phoneNumber(customerCreationRequest.getPhoneNumber())
             .createdAt(LocalDate.now())
             .address(customerCreationRequest.getAddress())
             .password(passwordEncoder.encode(customerCreationRequest.getPassword()))
@@ -66,5 +67,10 @@ public class CustomerServiceImplementation implements CustomerService {
             throw new InvalidUserRequestException(Notification.INVALID_CUSTOMER_DETAILS.message());
         }
         customerRepository.save(customer);
+    }
+
+    @Override
+    public void deleteAll() {
+        customerRepository.deleteAll();
     }
 }
