@@ -32,9 +32,9 @@ public class DataInitializer implements CommandLineRunner {
         Address address = Address.builder().
             city("Budapest")
             .country("Hungary")
-            .zipcode(1056)
+            .zipcode("1056")
             .street("Main street")
-            .houseNumber(11)
+            .houseNumber("11")
             .build();
 
         Customer customer = Customer.builder()
