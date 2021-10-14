@@ -11,7 +11,7 @@ import java.util.List;
 public interface AccountService {
     Account createAndSaveNewAccount(Long userId, AccountType type, Currency currency);
     BigDecimal getAccountBalance(Long accountId);
-    void transferFunds(BigDecimal amount, String sourceAccountNumber, String targetAccountNumber);
+    void transferFunds(BigDecimal amount, String sourceAccountNumber, String recipientAccountNumber);
     void freezeAccount(Long accountId);
     void reactivateAccount(Long accountId);
     void withdraw(String accountNumber, BigDecimal withdrawAmount);
