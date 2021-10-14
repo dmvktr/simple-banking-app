@@ -62,16 +62,14 @@ public class AccountServiceImplementation implements AccountService {
 
     @Transactional
     @Override
-    public void transferFunds(BigDecimal amount, String sourceAccountNumber, String targetAccountNumber) {
+    public void transferFunds(BigDecimal amount, String sourceAccountNumber, String recipientAccountNumber) {
         try {
             Account sourceAccount = accountRepository.findAccountByAccountNumber(sourceAccountNumber).orElse(null);
-            Account targetAccount = accountRepository.findAccountByAccountNumber(targetAccountNumber).orElse(null);
+            Account recipient = accountRepository.findAccountByAccountNumber(recipientAccountNumber).orElse(null);
             BigDecimal sourceAccountBalance = sourceAccount.getBalance();
             if (hasSufficientBalance(sourceAccountBalance, amount)) {
-                sourceAccount.setBalance(sourceAccountBalance.subtract(amount));
-                targetAccount.setBalance(targetAccount.getBalance().add(amount));
-                accountRepository.save(sourceAccount);
-                accountRepository.save(targetAccount);
+                updateAccountsBalanceTransfer(sourceAccountBalance.subtract(amount), sourceAccount, recipient,
+                    recipient.getBalance().add(amount));
             } else {
                 throw new InvalidUserRequestException(Notification.INSUFFICIENT_FUNDS.message());
             }
@@ -80,14 +78,22 @@ public class AccountServiceImplementation implements AccountService {
         }
     }
 
-    public boolean hasValidTransferDetails(FundTransferRequest fundTransferRequest) {//TODO refactor targetAcc variable
+    private void updateAccountsBalanceTransfer(BigDecimal newSourceBalance, Account sourceAccount, Account recipient,
+                                               BigDecimal newRecipientBalance) throws NullPointerException {
+        sourceAccount.setBalance(newSourceBalance);
+        recipient.setBalance(newRecipientBalance);
+        accountRepository.save(sourceAccount);
+        accountRepository.save(recipient);
+    }
+
+    public boolean hasValidTransferDetails(FundTransferRequest fundTransferRequest) {
         Account targetAccount = accountRepository.findAccountByAccountNumber(fundTransferRequest.getTargetAccountNumber())
             .orElseThrow(() -> new DataRetrievalFailureException(Notification.ACCOUNT_NOT_FOUND.message()));
         String targetAccountHolderName =
             targetAccount.getCustomer().getFirstName() + " " + targetAccount.getCustomer().getLastName();
 
-        return isNameMatchingTargetAccountHolderName(fundTransferRequest.getTargetAccountHolderName(), targetAccountHolderName) &&
-            isTargetAccountDifferentThanSourceAccount(fundTransferRequest.getTargetAccountNumber(), fundTransferRequest.getAccountNumber())
+        return isNameMatchingTargetAccountHolderName(fundTransferRequest.getTargetAccountHolderName(), targetAccountHolderName)
+            && isTargetAccountDifferentThanSourceAccount(fundTransferRequest.getTargetAccountNumber(), fundTransferRequest.getAccountNumber())
             && isAmountGreaterThanZero(fundTransferRequest.getAmount());
     }
 
@@ -127,11 +133,15 @@ public class AccountServiceImplementation implements AccountService {
             new DataRetrievalFailureException(Notification.ACCOUNT_NOT_FOUND.message()));
         BigDecimal balance = account.getBalance();
         if (hasSufficientBalance(balance, withdrawAmount)) {
-            account.setBalance(balance.subtract(withdrawAmount));
-            accountRepository.save(account);
+            updateBalance(balance.subtract(withdrawAmount), account);
         } else {
             throw new InvalidUserRequestException(Notification.INSUFFICIENT_FUNDS.message());
         }
+    }
+
+    private void updateBalance(BigDecimal newBalance, Account account) {
+        account.setBalance(newBalance);
+        accountRepository.save(account);
     }
 
     private boolean hasSufficientBalance(BigDecimal balance, BigDecimal requestedAmount) {
@@ -146,8 +156,7 @@ public class AccountServiceImplementation implements AccountService {
         }
         Account account = accountRepository.findAccountByAccountNumber(accountNumber).orElseThrow(() ->
             new DataRetrievalFailureException(Notification.ACCOUNT_NOT_FOUND.message()));
-        account.setBalance(account.getBalance().add(depositAmount));
-        accountRepository.save(account);
+        updateBalance(account.getBalance().add(depositAmount), account);
     }
 
     @Override
