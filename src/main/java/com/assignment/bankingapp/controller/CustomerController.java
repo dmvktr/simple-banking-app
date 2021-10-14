@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -26,7 +27,7 @@ public class CustomerController {
     }
 
     @PostMapping("/new")
-    public ResponseEntity<ResponseObject> newCustomer(@RequestBody CustomerCreationRequest customerCreationRequest){
+    public ResponseEntity<ResponseObject> newCustomer(@Valid @RequestBody CustomerCreationRequest customerCreationRequest){
         Customer newCustomer = customerService.newCustomer(customerCreationRequest);
         return ResponseEntity.ok(
             new ResponseObject(Notification.CUSTOMER_CREATION_SUCCESS.message(), HttpStatus.OK.value(), newCustomer));
@@ -36,6 +37,6 @@ public class CustomerController {
     public ResponseEntity<ResponseObject> getAllCustomers(){
         List<Customer> customers = customerService.getAllCustomers();
         return ResponseEntity.ok(
-            new ResponseObject(Notification.CUSTOMER_LISTING.message(), HttpStatus.OK.value(), customers));
+            new ResponseObject(Notification.CUSTOMER_LISTING_SUCCESS.message(), HttpStatus.OK.value(), customers));
     }
 }
