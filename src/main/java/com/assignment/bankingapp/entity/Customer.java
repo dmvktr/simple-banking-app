@@ -36,7 +36,7 @@ public class Customer {
     private boolean isAccountActive = true;
     private LocalDate createdAt;
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer", fetch = FetchType.EAGER)
     @Singular
     private Set<Account> accounts;
 
