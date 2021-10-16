@@ -87,13 +87,13 @@ public class AccountServiceImplementation implements AccountService {
     }
 
     public boolean hasValidTransferDetails(FundTransferRequest fundTransferRequest) {
-        Account targetAccount = accountRepository.findAccountByAccountNumber(fundTransferRequest.getTargetAccountNumber())
+        Account recipientAccount = accountRepository.findAccountByAccountNumber(fundTransferRequest.getRecipientAccountNumber())
             .orElseThrow(() -> new DataRetrievalFailureException(Notification.ACCOUNT_NOT_FOUND.message()));
-        String targetAccountHolderName =
-            targetAccount.getCustomer().getFirstName() + " " + targetAccount.getCustomer().getLastName();
+        String recipientAccountHolderName =
+            recipientAccount.getCustomer().getFirstName() + " " + recipientAccount.getCustomer().getLastName();
 
-        return isNameMatchingTargetAccountHolderName(fundTransferRequest.getTargetAccountHolderName(), targetAccountHolderName)
-            && isTargetAccountDifferentThanSourceAccount(fundTransferRequest.getTargetAccountNumber(), fundTransferRequest.getAccountNumber())
+        return isNameMatchingRecipientAccountHolderName(fundTransferRequest.getRecipientAccountHolderName(), recipientAccountHolderName)
+            && isRecipientAccountDifferentThanSourceAccount(fundTransferRequest.getRecipientAccountNumber(), fundTransferRequest.getAccountNumber())
             && isAmountGreaterThanZero(fundTransferRequest.getAmount());
     }
 
@@ -101,12 +101,14 @@ public class AccountServiceImplementation implements AccountService {
         return amount.compareTo(BigDecimal.ZERO) > 0;
     }
 
-    private boolean isNameMatchingTargetAccountHolderName(String providedTargetAccountName, String targetAccountHolderName) {
-        return providedTargetAccountName.equals(targetAccountHolderName);
+    private boolean isNameMatchingRecipientAccountHolderName(String providedRecipientAccountName,
+                                                             String actualRecipientAccountHolderName) {
+        return providedRecipientAccountName.equals(actualRecipientAccountHolderName);
     }
 
-    private boolean isTargetAccountDifferentThanSourceAccount(String targetAccountNumber, String sourceAccountNumber) {
-        return !targetAccountNumber.equals(sourceAccountNumber);
+    private boolean isRecipientAccountDifferentThanSourceAccount(String recipientAccountNumber,
+                                                                 String sourceAccountNumber) {
+        return !recipientAccountNumber.equals(sourceAccountNumber);
     }
 
     @Override

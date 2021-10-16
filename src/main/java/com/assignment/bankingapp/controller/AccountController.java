@@ -67,9 +67,9 @@ public class AccountController {
                     null));
         }
         accountService.transferFunds(fundTransferRequest.getAmount(), fundTransferRequest.getAccountNumber(),
-            fundTransferRequest.getTargetAccountNumber());
+            fundTransferRequest.getRecipientAccountNumber());
         Account sourceAccount = accountService.findAccountByAccountNumber(fundTransferRequest.getAccountNumber());
-        Account recipient = accountService.findAccountByAccountNumber(fundTransferRequest.getTargetAccountNumber());
+        Account recipient = accountService.findAccountByAccountNumber(fundTransferRequest.getRecipientAccountNumber());
         transactionService.createTransferTransaction(fundTransferRequest.getAmount(),
             fundTransferRequest.getTransactionNote(), TransactionType.TRANSFER, sourceAccount, recipient);
 

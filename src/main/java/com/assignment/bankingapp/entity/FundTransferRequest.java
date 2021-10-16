@@ -1,7 +1,6 @@
 package com.assignment.bankingapp.entity;
 
 import lombok.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -12,16 +11,16 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class FundTransferRequest extends TransactionRequest{
     @NotNull
-    private String targetAccountNumber;
+    private String recipientAccountNumber;
     @NotNull
-    private String targetAccountHolderName;
+    private String recipientAccountHolderName;
     private String transactionNote;
     
-    public FundTransferRequest(@NotNull String accountNumber, @NotNull BigDecimal amount, String targetAccountNumber,
-                               String targetAccountHolderName, String transactionNote) {
+    public FundTransferRequest(@NotNull String accountNumber, @NotNull BigDecimal amount, String recipientAccountNumber,
+                               String recipientAccountHolderName, String transactionNote) {
         super(accountNumber, amount);
-        this.targetAccountNumber = targetAccountNumber;
-        this.targetAccountHolderName = targetAccountHolderName;
+        this.recipientAccountNumber = recipientAccountNumber;
+        this.recipientAccountHolderName = recipientAccountHolderName;
         this.transactionNote = transactionNote;
     }
 }
